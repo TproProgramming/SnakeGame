@@ -26,6 +26,12 @@ movement_timer = pygame.time.get_ticks()
 # Set the movement speed (lower value = faster speed)
 movement_speed = 150
 
+# Set the initial score
+score = 0
+
+# Set the font for the score display
+font = pygame.font.Font(None, 36)
+
 # Game loop
 while True:
     # Handle events
@@ -74,6 +80,9 @@ while True:
         food.x = random.randint(0, 640 - 20)
         food.y = random.randint(0, 480 - 20)
 
+        # Increment the score
+        score += 1
+
     # Check for collision with walls
     if snake[0].x < 0 or snake[0].x > 640 - 20 or snake[0].y < 0 or snake[0].y > 480 - 20:
         # Game over
@@ -82,25 +91,31 @@ while True:
     
     """
     # Check for collision with itself
-    for segment in snake[1:]:
-        if snake[0].colliderect(segment):
+    for i in range(1, len(snake)):
+        if snake[0].colliderect(snake[i]):
             # Game over
             pygame.quit()
             sys.exit()
     """
-    
     # Clear the screen
     screen.fill((0, 0, 0))
 
-    # Draw the snake
+        # Draw the snake
     for segment in snake:
         pygame.draw.rect(screen, (0, 255, 0), segment)
 
     # Draw the food
     pygame.draw.rect(screen, (255, 0, 0), food)
 
+    # Render the score text
+    score_text = font.render("Score: " + str(score), True, (255, 255, 255))
+
+    # Draw the score text on the screen
+    screen.blit(score_text, (10, 10))
+
     # Update the display
     pygame.display.update()
 
     # Wait for a frame
     clock.tick(60)
+
