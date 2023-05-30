@@ -1,5 +1,5 @@
 # Snake Game
-## Prerequisites
+### Prerequisites
   Python 3.x
   Pygame library
 
