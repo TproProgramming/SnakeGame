@@ -118,17 +118,66 @@ def run_game():
         clock.tick(60)
 
 
-def show_high_scores(scores):
+def show_high_scores(high_scores, screen, font):
+    screen.fill((0, 0, 0))
+
     # Sort scores in descending order
-    scores.sort(reverse=True)
+    high_scores.sort(key=lambda x: x[1], reverse=True)
 
     # Display the top 10 scores
-    print("----- Top 10 High Scores -----")
-    for i, (name, score) in enumerate(scores[:10]):
-        print(f"{i+1}. {name}: {score}")
-    print("-----------------------------")
+    title_text = font.render("Top 10 High Scores", True, (255, 255, 255))
+    screen.blit(title_text, (250, 50))
+
+    for i, (name, score) in enumerate(high_scores[:10]):
+        score_text = font.render(f"{i + 1}. {name}: {score}", True, (255, 255, 255))
+        screen.blit(score_text, (250, 100 + i * 30))
+
+    pygame.display.update()
 
 
+def get_player_name(screen, font):
+    input_box = pygame.Rect(250, 250, 140, 32)
+    color_inactive = pygame.Color('lightskyblue3')
+    color_active = pygame.Color('dodgerblue2')
+    color = color_inactive
+    active = False
+    player_name = ''
+    done = False
+
+    while not done:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if input_box.collidepoint(event.pos):
+                    active = not active
+                else:
+                    active = False
+                color = color_active if active else color_inactive
+            if event.type == pygame.KEYDOWN:
+                if active:
+                    if event.key == pygame.K_RETURN:
+                        done = True
+                    elif event.key == pygame.K_BACKSPACE:
+                        player_name = player_name[:-1]
+                    else:
+                        player_name += event.unicode
+
+        screen.fill((0, 0, 0))
+        pygame.draw.rect(screen, color, input_box, 2)
+        
+        # Add text above the input box
+        text_prompt = font.render("Enter Your Name:", True, (255, 255, 255))
+        screen.blit(text_prompt, (250, 220))
+        
+        text_surface = font.render(player_name, True, (255, 255, 255))
+        screen.blit(text_surface, (input_box.x + 5, input_box.y + 5))
+        pygame.display.flip()
+
+    return player_name
+
+ 
 def update_high_scores(scores, new_score, name):
     scores.append((name, new_score))
     scores.sort(key=lambda x: x[1], reverse=True)
@@ -152,7 +201,17 @@ def load_high_scores():
     return scores
 
 
+
 def play_game():
+    # Initialize pygame
+    pygame.init()
+
+    # Create the screen
+    screen = pygame.display.set_mode((640, 480))
+
+    # Set the font for the score display
+    font = pygame.font.Font(None, 36)
+
     high_scores = load_high_scores()
 
     while True:
@@ -160,18 +219,67 @@ def play_game():
 
         if score > 0 and score > min([s for _, s in high_scores] + [0]):
             # Player broke into the top 10 scores
-            name = input("Congratulations! Enter your name: ")
-            high_scores = update_high_scores(high_scores, score, name)
+            player_name = get_player_name(screen, font)
+            high_scores = update_high_scores(high_scores, score, player_name)
             save_high_scores(high_scores)
-            show_high_scores(high_scores)
+            show_high_scores(high_scores, screen, font)
         else:
             # Player did not break into the top 10 scores
-            show_high_scores(high_scores)
+            show_high_scores(high_scores, screen, font)
 
-        play_again = input("Play again? (Y/N): ")
-        if play_again.upper() != "Y":
+        play_again = ''
+        while play_again.upper() != "Y" and play_again.upper() != "N":
+            play_again_text = font.render("Play again? (Y/N): ", True, (255, 255, 255))
+            screen.blit(play_again_text, (250, 400))
+            pygame.display.flip()
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_y:
+                        play_again = "Y"
+                    elif event.key == pygame.K_n:
+                        play_again = "N"
+
+        if play_again.upper() == "N":
             break
 
 
-play_game()
+def main():
+    # Initialize pygame
+    pygame.init()
+
+    # Create the screen
+    screen = pygame.display.set_mode((640, 480))
+
+    # Set the font for the score display
+    font = pygame.font.Font(None, 36)
+
+    play_game()
+
+    # Display high scores before quitting
+    show_high_scores(load_high_scores(), screen, font)
+
+    while True:
+        play_again_text = font.render("Play again? (Y/N): ", True, (255, 255, 255))
+        screen.blit(play_again_text, (250, 400))
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_y:
+                    play_game()
+                    show_high_scores(load_high_scores(), screen, font)
+                elif event.key == pygame.K_n:
+                    pygame.quit()
+                    sys.exit()
+
+
+if __name__ == "__main__":
+    main()
 
